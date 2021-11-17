@@ -6,6 +6,7 @@ Author: Joshua R Benton
 
 
 ```{r setup, include=FALSE, echo=FALSE}
+#These packages are for data visualization, but are not required for the calculations
 
 library(ggplot2)
 library(fields)
@@ -133,7 +134,8 @@ for (i in 1:nrow(DATA2)) {
   DATA2[i,8] = gradient[3]  
 
   }
-  
+
+write.csv(DATA2, "Hydraulic_Gradients.csv")
 ```
 
 
@@ -177,13 +179,4 @@ plot(A$B,A$C, xlab = "X", ylab = "Y", pch = 16)
 
 
 ```
-
-
-
-
-Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
-
-When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
-
-The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
 
