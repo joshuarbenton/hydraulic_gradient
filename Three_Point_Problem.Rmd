@@ -1,0 +1,189 @@
+---
+title: "Calculating Hydraulic Gradients: Solving Three-Point Problem"
+output: html_notebook
+Author: Joshua R Benton
+---
+
+
+```{r setup, include=FALSE, echo=FALSE}
+
+library(ggplot2)
+library(fields)
+
+```
+
+```{r}
+#Constants
+
+#Cartesian coordinates for each well (Example UTM).
+#IMPORTANT: Must be in the same length units as water table elevation
+
+#Well 1
+x1 <- 2
+y1 <- 2
+
+#Well 2
+x2 <- 6
+y2 <- 8
+
+#Well 3
+x3 <- 2
+y3 <- 14
+
+#Center of well triangle
+xc = (x1+x2+x3)/3
+yc = (y1+y2+y3)/3
+
+
+```
+
+```{r} 
+#This chunk imports water levels used for gradient calculations. 
+#IMPORTANT: Water table elevations from each well must be relative to the same datum (e.g. Mean Sea Level). 
+
+
+Well_1 <- read.csv('Well_1.csv', sep = ",", header = TRUE)
+colnames(Well_1)<-c("Date_Time","Level_1")
+
+Well_1$Date_Time <- as.POSIXct(Well_1$Date_Time, format = "%m/%d/%Y %H:%M")
+                                
+
+Well_2 <- read.csv('Well_2.csv', sep = ",", header = TRUE)
+colnames(Well_2)<-c("Date_Time","Level_2")
+
+Well_2$Date_Time <- as.POSIXct(Well_2$Date_Time, format = "%m/%d/%Y %H:%M")
+
+
+Well_3 <- read.csv('Well_3.csv', sep = ",", header = TRUE)
+
+colnames(Well_3)<-c("Date_Time","Level_3")
+
+Well_3$Date_Time <- as.POSIXct(Well_3$Date_Time, format = "%m/%d/%Y %H:%M")
+
+
+```
+
+```{r}
+#Merge data.frames so that each elevation is on the same time-stamp
+
+DATA1 <- merge(Well_1,Well_2, by = "Date_Time")
+DATA2 <- merge(DATA1, Well_3, by = "Date_Time")
+
+```
+
+```{r}
+#Creates new columns in the merged database to populate calculated values into: 
+
+#hydraulic gradient (L/L)
+DATA2$gradient <- NA
+
+#Inferred flow direction (degrees from Y-axis)
+DATA2$direction <- NA
+
+# X & Y components of the hydraulic gradient vector. 
+
+DATA2$Vx <- NA
+
+DATA2$Vy <- NA
+
+```
+
+
+```{r}
+#This code assumes a linear change in water level between each well (planar surface), determines the hydraulic gradient at each time-step
+
+#Matrix with x,y coordinates of each well
+A <- matrix(c(1,x1,y1,1,x2,y2,1,x3,y3), 3, 3, byrow = TRUE)
+colnames(A)[c(1,2,3)] <- c('A','B','C')
+
+  
+for (i in 1:nrow(DATA2)) {
+
+#Matrix of water table elevations
+  b <- matrix(c(DATA2[i,2], DATA2[i,3], DATA2[i,4]))
+
+  gradient <- solve(A) %*% b
+  
+  #Pythagorean theorem for calculating maximum gradient, (Vx^2 + Vy^2)^(1/2)
+  
+  DATA2[i,5] = (gradient[2]^2 + gradient[3]^2)^(1/2)
+  
+  #Determines which quadrant the direction of maximum gradient, based upon vector components (Vx & Vy), and calculates the azimuth (degrees from Y-axis) for gradients in each of the four possible quadrants
+  
+  #1st quadrant
+  if (gradient[2] > 0 && gradient[3] > 0) {
+    DATA2[i,6] = 270 - atan(gradient[3]/gradient[2])*180/pi
+  }
+  #2nd quadrant
+  else if (gradient[2] < 0 && gradient[3] > 0) {
+    DATA2[i,6] = 90 - atan(gradient[3]/gradient[2])*180/pi
+  }
+  #3rd quadrant
+  else if (gradient[2] < 0 && gradient[3] < 0) {
+    DATA2[i,6] = 90 - atan(gradient[3]/gradient[2])*180/pi
+  }
+  #4th quadrant
+  else   {
+    DATA2[i,6] = 270 - atan(gradient[3]/gradient[2])*180/pi
+  }
+  
+# Vx & Vy vector Components
+  
+  DATA2[i,7] = gradient[2]
+  DATA2[i,8] = gradient[3]  
+
+  }
+  
+```
+
+
+```{r }
+
+#Plots the water levels, gradients, and direction as time-series
+
+ ggplot(DATA2, aes(Date_Time,Level_1)) + geom_line(color = "blue") + 
+  geom_line(data = DATA2, aes(Date_Time,Level_2), color = "darkgreen") + 
+  geom_line(data = DATA2, aes(Date_Time,Level_3), color = "red") + 
+  theme_bw() +  theme(text = element_text(size=12)) + ylab("Water Level (L)") + 
+  xlab("Date & Time") 
+
+ggplot(DATA2, aes(Date_Time,direction)) + geom_line() + 
+  theme_bw() +  theme(text = element_text(size=12)) + 
+  ylab("Azimuth (Degrees from North)") + xlab("Date & Time") 
+
+ggplot(DATA2, aes(Date_Time,gradient)) + geom_line() +
+  theme_bw() + theme(text = element_text(size=12)) + ylab("Gradient (L/L)") + xlab("Date & Time")
+
+
+```
+
+
+```{r }
+
+#Plots the inferred direction of groundwater flow as a vector field where the tail of each vector originates at the center of the well triangle
+
+A = data.frame(A)
+plot(A$B,A$C, xlab = "X", ylab = "Y", pch = 16)
+
+  points(xc,yc, pch = 1)
+
+  arrow.plot(xc, yc, -(DATA2$Vx), -(DATA2$Vy), arrow.ex = 1,  col = "blue", lwd = 2, true.angle = TRUE)
+  
+#legend("topleft",
+#legend=c("Groundwater Well","Well Center of Gravity", "Flow Direction","Mean Flow Direction"),
+#pch = c(19,1,NA, NA),lty = c(NA,NA,1,1), col  = c(col2,"black", "red","blue","darkblue"),  cex=legend_text, inset = 0.01, lwd = 4)
+
+
+
+
+```
+
+
+
+
+Add a new chunk by clicking the *Insert Chunk* button on the toolbar or by pressing *Ctrl+Alt+I*.
+
+When you save the notebook, an HTML file containing the code and output will be saved alongside it (click the *Preview* button or press *Ctrl+Shift+K* to preview the HTML file).
+
+The preview shows you a rendered HTML copy of the contents of the editor. Consequently, unlike *Knit*, *Preview* does not run any R code chunks. Instead, the output of the chunk when it was last run in the editor is displayed.
+
