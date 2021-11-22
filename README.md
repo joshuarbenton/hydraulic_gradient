@@ -3,7 +3,7 @@ Define the direction of groundwater flow in 2-dimensions by solving the three po
 This program assumes a linear change in water level between each well and expresses the water table as a plane.
 
 User inputs: 
-1.) A time-series of water levels from each well (see example files). Water levels must be expressed relative to the same datum.
+1.) A time-series of water levels from each well (see example files). Water levels must be expressed relative to the same datum between each well.
 2.) Cartesian coordinates (XY) of each groundwater well. Units must be the same as water level units. 
 
 Output: 
