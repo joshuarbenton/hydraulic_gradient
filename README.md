@@ -3,7 +3,7 @@ This program calculates the horizontal gradient and direction of groundwater flo
 
 Required inputs: 
 
-1.) A time-series of water levels from three wells (see example files). Water levels must be expressed relative to the same datum between each well.
+1.) A time-series of water levels from three wells (example files: Well_#.csv). Water levels must be expressed relative to the same datum between each well.
 2.) Cartesian coordinates (XY) of each groundwater well. Units must be the same as water level units. 
 
 Output:
