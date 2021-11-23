@@ -1,4 +1,4 @@
-# three_point_problem
+# Hydraulic Gradients
 Define the direction of groundwater flow in 2-dimensions by solving the three point problem
 This program assumes a linear change in water level between each well and expresses the water table as a plane.
 
