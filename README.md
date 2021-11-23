@@ -1,5 +1,5 @@
 # Hydraulic Gradients - Three Point Problem Time Series
-This program calculates the horizontal gradient and direction of groundwater flow by assuming a linear change in water level between three wells. 
+This program calculates the horizontal gradient and direction of groundwater flow by assuming a linear change in water level between three wells defining a geometric plane.  
 
 Required inputs: 
 
